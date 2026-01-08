@@ -1,0 +1,332 @@
+{% extends "base.html" %}
+
+{% block title %}贪吃蛇 - 游戏{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex animate-fade-in">
+    <!-- 左侧栏 - 用户信息 -->
+    <aside class="w-72 p-6 flex flex-col">
+        <!-- 用户卡片 -->
+        <div class="glass-card rounded-xl p-6 mb-6">
+            <!-- 头像 -->
+            <div class="flex justify-center mb-4">
+                <div
+                    class="w-20 h-20 rounded-full bg-gradient-to-br from-snake-green to-accent-cyan flex items-center justify-center text-3xl font-bold text-dark-bg shadow-lg shadow-snake-green/20">
+                    {{ user.username[0].upper() }}
+                </div>
+            </div>
+
+            <!-- 用户名 -->
+            <h2 class="text-xl font-bold text-center text-white mb-2">
+                {{ user.username }}
+            </h2>
+
+            <!-- 上次登录 -->
+            <p class="text-text-secondary text-sm text-center">
+                上次登录: <span id="last-login">加载中...</span>
+            </p>
+        </div>
+
+        <!-- 个人统计 -->
+        <div class="glass-card rounded-xl p-5 flex-1">
+            <h3 class="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-4">
+                个人数据
+            </h3>
+
+            <div class="space-y-4">
+                <!-- 总游玩次数 -->
+                <div class="flex items-center justify-between">
+                    <span class="text-text-secondary text-sm">总游玩次数</span>
+                    <span id="total-games" class="text-white font-bold">-</span>
+                </div>
+
+                <!-- 历史最高分 -->
+                <div class="flex items-center justify-between">
+                    <span class="text-text-secondary text-sm">历史最高分</span>
+                    <span id="high-score" class="text-snake-green font-bold">-</span>
+                </div>
+
+                <!-- 平均时长 -->
+                <div class="flex items-center justify-between">
+                    <span class="text-text-secondary text-sm">平均时长</span>
+                    <span id="avg-duration" class="text-white font-bold">-</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 颜色自定义面板 -->
+        <div class="glass-card rounded-xl p-5 mb-6">
+            <h3 class="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-4 flex items-center gap-2">
+                <span>🎨</span> 颜色设置
+            </h3>
+            <div class="space-y-4">
+                <!-- 蛇身颜色选择器 -->
+                <div class="flex items-center justify-between">
+                    <span class="text-text-secondary text-sm">蛇身颜色</span>
+                    <input type="color" id="snake-color-picker" value="#00FF41" 
+                           class="w-8 h-8 rounded cursor-pointer border-none appearance-none bg-transparent"
+                           title="选择蛇身主色">
+                </div>
+                <!-- 背景颜色选择器 -->
+                <div class="flex items-center justify-between">
+                    <span class="text-text-secondary text-sm">背景颜色</span>
+                    <input type="color" id="bg-color-picker" value="#1E1E1E"
+                           class="w-8 h-8 rounded cursor-pointer border-none appearance-none bg-transparent"
+                           title="选择毛玻璃背景色">
+                </div>
+            </div>
+        </div>
+
+        <!-- 登出按钮 -->
+        <a href="{{ url_for('logout') }}"
+            class="mt-6 py-3 px-4 glass-card rounded-lg text-center text-text-secondary hover:text-white hover:border-food-red transition-all duration-300">
+            退出登录
+        </a>
+    </aside>
+
+    <!-- 中心区 - 游戏画布 -->
+    <main class="flex-1 flex flex-col items-center justify-center p-8">
+        <!-- 顶部状态栏 -->
+        <div class="flex items-center justify-center gap-8 mb-6">
+            <!-- 当前分数 -->
+            <div class="glass-card rounded-xl px-6 py-4 text-center">
+                <p class="text-text-secondary text-xs uppercase tracking-wider mb-1">当前得分</p>
+                <p id="current-score" class="text-3xl font-bold text-snake-green">0</p>
+            </div>
+
+            <!-- 关卡信息 -->
+            <div class="glass-card rounded-xl px-6 py-4 text-center min-w-[160px]">
+                <p class="text-text-secondary text-xs uppercase tracking-wider mb-1">当前关卡</p>
+                <div class="flex items-center justify-center gap-2">
+                    <span id="level-number" class="text-2xl font-bold text-accent-cyan">1</span>
+                    <span id="level-name" class="text-sm text-white">新手村</span>
+                </div>
+                <!-- 关卡进度条 -->
+                <div class="mt-2 h-1 bg-dark-border rounded-full overflow-hidden">
+                    <div id="level-progress"
+                        class="h-full bg-gradient-to-r from-snake-green to-accent-cyan transition-all duration-300"
+                        style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- 游戏状态 -->
+            <div class="glass-card rounded-xl px-6 py-4 text-center">
+                <p class="text-text-secondary text-xs uppercase tracking-wider mb-1">游戏状态</p>
+                <p id="game-status" class="text-xl font-semibold text-accent-cyan">准备开始</p>
+            </div>
+        </div>
+
+        <!-- 游戏画布容器 -->
+        <div id="canvas-container" class="relative">
+            <!-- 画布边框光效 -->
+            <div
+                class="absolute -inset-1 bg-gradient-to-r from-snake-green via-accent-cyan to-snake-green rounded-xl opacity-40 blur-md">
+            </div>
+
+            <!-- 游戏画布 -->
+            <canvas id="game-canvas" width="600" height="600"
+                class="relative rounded-xl border border-white/10 shadow-2xl glass-canvas"></canvas>
+
+            <!-- 关卡升级提示 -->
+            <div id="level-up-notification"
+                class="absolute inset-0 flex items-center justify-center pointer-events-none hidden">
+                <div class="glass-card rounded-2xl px-8 py-6 text-center transform scale-110">
+                    <p class="text-yellow-400 text-lg font-bold mb-2">🎉 关卡提升！</p>
+                    <p class="level-name text-2xl font-bold text-white">新手村</p>
+                </div>
+            </div>
+
+            <!-- 开始游戏覆盖层 -->
+            <div id="start-overlay"
+                class="absolute inset-0 glass-overlay rounded-xl flex flex-col items-center justify-center">
+                <div class="text-center">
+                    <h2 class="text-3xl font-bold text-white mb-4">准备好了吗？</h2>
+                    <p class="text-text-secondary mb-8">按 <span class="text-snake-green font-bold">空格键</span> 或点击下方按钮开始
+                    </p>
+                    <button id="start-btn" onclick="startGame()"
+                        class="px-8 py-4 bg-gradient-to-r from-snake-green to-emerald-500 text-dark-bg font-bold text-lg rounded-xl hover:shadow-lg hover:shadow-snake-green/30 transform hover:scale-105 transition-all duration-300">
+                        开始游戏
+                    </button>
+                </div>
+            </div>
+
+            <!-- Game Over 覆盖层 -->
+            <div id="gameover-overlay"
+                class="absolute inset-0 glass-overlay rounded-xl flex flex-col items-center justify-center hidden">
+                <div class="text-center max-w-sm">
+                    <h2 class="text-4xl font-bold text-food-red mb-4">游戏结束</h2>
+
+                    <!-- 本次得分 -->
+                    <div class="glass-card rounded-xl p-6 mb-6">
+                        <p class="text-text-secondary text-sm mb-2">本次得分</p>
+                        <p id="final-score" class="text-5xl font-bold text-snake-green mb-2">0</p>
+
+                        <!-- 达到关卡 -->
+                        <p class="text-accent-cyan text-sm mb-4">达到关卡: <span id="final-level"
+                                class="font-bold">新手村</span></p>
+
+                        <!-- 击败百分比 -->
+                        <div class="flex items-center justify-center gap-2">
+                            <span class="text-text-secondary">击败了全球</span>
+                            <span id="beat-percentage" class="text-accent-cyan font-bold text-xl">0%</span>
+                            <span class="text-text-secondary">的玩家</span>
+                        </div>
+
+                        <!-- 新纪录提示 -->
+                        <div id="new-record" class="mt-4 text-yellow-400 font-bold hidden">
+                            🏆 新纪录！
+                        </div>
+                    </div>
+
+                    <!-- 操作按钮 -->
+                    <div class="flex gap-4">
+                        <button onclick="shareScore()"
+                            class="flex-1 py-3 px-4 glass-card border border-accent-cyan text-accent-cyan rounded-lg hover:bg-accent-cyan/10 transition-all duration-300">
+                            一键分享
+                        </button>
+                        <button onclick="restartGame()"
+                            class="flex-1 py-3 px-4 bg-gradient-to-r from-snake-green to-emerald-500 text-dark-bg font-semibold rounded-lg hover:shadow-lg hover:shadow-snake-green/25 transform hover:scale-[1.02] transition-all duration-300">
+                            再来一局
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 操作提示 -->
+        <div class="mt-8 flex items-center gap-8 text-text-secondary text-sm">
+            <div class="flex items-center gap-2">
+                <kbd class="px-2 py-1 glass-card rounded">W</kbd>
+                <kbd class="px-2 py-1 glass-card rounded">A</kbd>
+                <kbd class="px-2 py-1 glass-card rounded">S</kbd>
+                <kbd class="px-2 py-1 glass-card rounded">D</kbd>
+                <span>或方向键移动</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <kbd class="px-3 py-1 glass-card rounded">Space</kbd>
+                <span>暂停/继续</span>
+            </div>
+        </div>
+    </main>
+
+    <!-- 右侧栏 - 排行榜 -->
+    <aside class="w-80 p-6 flex flex-col">
+        <!-- 排行榜 -->
+        <div class="glass-card rounded-xl p-5 flex-1">
+            <h3 class="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-4 flex items-center gap-2">
+                <span>🏆</span> 全球排行榜
+            </h3>
+
+            <div id="leaderboard" class="space-y-3 max-h-[500px] overflow-y-auto">
+                <div class="text-text-secondary text-center py-4">加载中...</div>
+            </div>
+        </div>
+    </aside>
+</div>
+
+<!-- 隐藏的游戏数据 -->
+<input type="hidden" id="session-id" value="{{ session_id }}">
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/game.js') }}"></script>
+<script>
+    // 页面加载完成后初始化
+    document.addEventListener('DOMContentLoaded', () => {
+        // 加载用户统计
+        loadUserStats();
+        // 加载排行榜
+        loadLeaderboard();
+        // 初始化游戏
+        initGame();
+    });
+
+    // 加载用户统计数据
+    async function loadUserStats() {
+        try {
+            const response = await fetch('/api/user_stats');
+            const data = await response.json();
+
+            if (data.success) {
+                // 更新统计数据
+                document.getElementById('total-games').textContent = data.stats.total_games;
+                document.getElementById('high-score').textContent = data.stats.high_score;
+                document.getElementById('avg-duration').textContent =
+                    data.stats.avg_duration > 0 ? `${data.stats.avg_duration}秒` : '-';
+
+                // 更新上次登录时间
+                if (data.last_login) {
+                    const date = new Date(data.last_login);
+                    document.getElementById('last-login').textContent =
+                        date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                } else {
+                    document.getElementById('last-login').textContent = '首次登录';
+                }
+            }
+        } catch (error) {
+            console.error('加载用户统计失败:', error);
+        }
+    }
+
+    // 加载排行榜
+    async function loadLeaderboard() {
+        try {
+            const response = await fetch('/api/leaderboard');
+            const data = await response.json();
+
+            if (data.success) {
+                const container = document.getElementById('leaderboard');
+
+                if (data.leaderboard.length === 0) {
+                    container.innerHTML = '<div class="text-text-secondary text-center py-4">暂无数据</div>';
+                    return;
+                }
+
+                container.innerHTML = data.leaderboard.map((entry, index) => {
+                    // 排名颜色
+                    let rankClass = 'text-text-secondary';
+                    let medal = '';
+                    if (entry.rank === 1) { rankClass = 'text-yellow-400'; medal = '🥇'; }
+                    else if (entry.rank === 2) { rankClass = 'text-gray-300'; medal = '🥈'; }
+                    else if (entry.rank === 3) { rankClass = 'text-amber-600'; medal = '🥉'; }
+
+                    return `
+                        <div class="flex items-center justify-between py-2 ${index !== data.leaderboard.length - 1 ? 'border-b border-white/10' : ''}">
+                            <div class="flex items-center gap-3">
+                                <span class="${rankClass} font-bold w-6">${medal || entry.rank}</span>
+                                <span class="text-white truncate max-w-[120px]">${entry.username}</span>
+                            </div>
+                            <span class="text-snake-green font-bold">${entry.score}</span>
+                        </div>
+                    `;
+                }).join('');
+            }
+        } catch (error) {
+            console.error('加载排行榜失败:', error);
+        }
+    }
+
+    // 分享分数
+    function shareScore() {
+        const score = document.getElementById('final-score').textContent;
+        const beatPercent = document.getElementById('beat-percentage').textContent;
+        const level = document.getElementById('final-level').textContent;
+        const text = `我在贪吃蛇游戏中获得了 ${score} 分，达到了「${level}」关卡，击败了全球 ${beatPercent} 的玩家！来挑战我吧！🐍`;
+
+        if (navigator.share) {
+            navigator.share({
+                title: '贪吃蛇游戏',
+                text: text,
+                url: window.location.origin
+            }).catch(console.error);
+        } else {
+            // 复制到剪贴板
+            navigator.clipboard.writeText(text).then(() => {
+                alert('分享内容已复制到剪贴板！');
+            }).catch(() => {
+                alert(text);
+            });
+        }
+    }
+</script>
+{% endblock %}

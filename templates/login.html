@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+
+{% block title %}登录 - 贪吃蛇{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center px-4 py-12">
+    <!-- 背景装饰 -->
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+        <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-snake-green/5 rounded-full blur-3xl"></div>
+        <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent-cyan/5 rounded-full blur-3xl"></div>
+    </div>
+
+    <!-- 登录卡片 -->
+    <div id="auth-card" class="relative z-10 w-full max-w-md">
+        <!-- Logo 和标题 -->
+        <div class="text-center mb-8 animate-fade-in">
+            <div
+                class="inline-flex items-center justify-center w-20 h-20 bg-dark-card rounded-2xl mb-4 border border-snake-green/30 animate-pulse-glow">
+                <svg class="w-10 h-10 text-snake-green" fill="currentColor" viewBox="0 0 24 24">
+                    <path
+                        d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
+                </svg>
+            </div>
+            <h1
+                class="text-3xl font-bold bg-gradient-to-r from-snake-green to-accent-cyan bg-clip-text text-transparent">
+                贪吃蛇
+            </h1>
+            <p class="text-text-secondary mt-2">经典游戏，现代体验</p>
+        </div>
+
+        <!-- 表单容器 -->
+        <div class="bg-dark-card rounded-2xl border border-dark-border p-8 shadow-xl animate-slide-up">
+            <!-- 切换标签 -->
+            <div class="flex mb-8 bg-dark-bg rounded-lg p-1">
+                <button id="login-tab" onclick="switchTab('login')"
+                    class="flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-300 tab-active">
+                    登录
+                </button>
+                <button id="register-tab" onclick="switchTab('register')"
+                    class="flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-300 text-text-secondary hover:text-white">
+                    注册
+                </button>
+            </div>
+
+            <!-- 登录表单 -->
+            <form id="login-form" class="space-y-6">
+                <div>
+                    <label for="login-username" class="block text-sm font-medium text-text-secondary mb-2">
+                        用户名
+                    </label>
+                    <input type="text" id="login-username" name="username" required
+                        class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg focus:outline-none focus:border-snake-green focus:ring-1 focus:ring-snake-green transition-all duration-300 text-white placeholder-text-secondary/50"
+                        placeholder="请输入用户名">
+                </div>
+                <div>
+                    <label for="login-password" class="block text-sm font-medium text-text-secondary mb-2">
+                        密码
+                    </label>
+                    <input type="password" id="login-password" name="password" required
+                        class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg focus:outline-none focus:border-snake-green focus:ring-1 focus:ring-snake-green transition-all duration-300 text-white placeholder-text-secondary/50"
+                        placeholder="请输入密码">
+                </div>
+                <button type="submit" id="login-btn"
+                    class="w-full py-3 px-4 bg-gradient-to-r from-snake-green to-emerald-500 text-dark-bg font-semibold rounded-lg hover:shadow-lg hover:shadow-snake-green/25 transform hover:scale-[1.02] transition-all duration-300">
+                    开始游戏
+                </button>
+            </form>
+
+            <!-- 注册表单 -->
+            <form id="register-form" class="space-y-6 hidden">
+                <div>
+                    <label for="register-username" class="block text-sm font-medium text-text-secondary mb-2">
+                        用户名
+                    </label>
+                    <input type="text" id="register-username" name="username" required
+                        class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg focus:outline-none focus:border-accent-cyan focus:ring-1 focus:ring-accent-cyan transition-all duration-300 text-white placeholder-text-secondary/50"
+                        placeholder="2-20 个字符">
+                </div>
+                <div>
+                    <label for="register-password" class="block text-sm font-medium text-text-secondary mb-2">
+                        密码
+                    </label>
+                    <input type="password" id="register-password" name="password" required
+                        class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg focus:outline-none focus:border-accent-cyan focus:ring-1 focus:ring-accent-cyan transition-all duration-300 text-white placeholder-text-secondary/50"
+                        placeholder="至少 4 个字符">
+                </div>
+                <div>
+                    <label for="register-confirm" class="block text-sm font-medium text-text-secondary mb-2">
+                        确认密码
+                    </label>
+                    <input type="password" id="register-confirm" name="confirm" required
+                        class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg focus:outline-none focus:border-accent-cyan focus:ring-1 focus:ring-accent-cyan transition-all duration-300 text-white placeholder-text-secondary/50"
+                        placeholder="再次输入密码">
+                </div>
+                <button type="submit" id="register-btn"
+                    class="w-full py-3 px-4 bg-gradient-to-r from-accent-cyan to-blue-500 text-dark-bg font-semibold rounded-lg hover:shadow-lg hover:shadow-accent-cyan/25 transform hover:scale-[1.02] transition-all duration-300">
+                    创建账户
+                </button>
+            </form>
+
+            <!-- 消息提示 -->
+            <div id="message" class="mt-4 text-center text-sm hidden"></div>
+        </div>
+
+        <!-- 底部提示 -->
+        <p class="text-center text-text-secondary text-sm mt-6">
+            使用 <span class="text-snake-green">WASD</span> 或 <span class="text-accent-cyan">方向键</span> 控制蛇的移动
+        </p>
+    </div>
+</div>
+
+<!-- 过渡遮罩 -->
+<div id="transition-overlay"
+    class="fixed inset-0 bg-dark-bg z-50 pointer-events-none opacity-0 transition-opacity duration-500"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // 切换登录/注册标签
+    function switchTab(tab) {
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+        const loginTab = document.getElementById('login-tab');
+        const registerTab = document.getElementById('register-tab');
+        const message = document.getElementById('message');
+
+        // 隐藏消息
+        message.classList.add('hidden');
+
+        if (tab === 'login') {
+            loginForm.classList.remove('hidden');
+            registerForm.classList.add('hidden');
+            loginTab.classList.add('tab-active');
+            loginTab.classList.remove('text-text-secondary');
+            registerTab.classList.remove('tab-active');
+            registerTab.classList.add('text-text-secondary');
+        } else {
+            loginForm.classList.add('hidden');
+            registerForm.classList.remove('hidden');
+            registerTab.classList.add('tab-active');
+            registerTab.classList.remove('text-text-secondary');
+            loginTab.classList.remove('tab-active');
+            loginTab.classList.add('text-text-secondary');
+        }
+    }
+
+    // 显示消息
+    function showMessage(text, isError = false) {
+        const message = document.getElementById('message');
+        message.textContent = text;
+        message.classList.remove('hidden', 'text-snake-green', 'text-food-red');
+        message.classList.add(isError ? 'text-food-red' : 'text-snake-green');
+    }
+
+    // 平滑跳转动画
+    function smoothTransition(url) {
+        const overlay = document.getElementById('transition-overlay');
+        overlay.classList.remove('opacity-0');
+        overlay.classList.add('opacity-100');
+
+        setTimeout(() => {
+            window.location.href = url;
+        }, 500);
+    }
+
+    // 登录表单提交
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const username = document.getElementById('login-username').value;
+        const password = document.getElementById('login-password').value;
+        const btn = document.getElementById('login-btn');
+
+        btn.disabled = true;
+        btn.textContent = '登录中...';
+
+        try {
+            const response = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                showMessage('登录成功！正在进入游戏...');
+                smoothTransition(data.redirect);
+            } else {
+                showMessage(data.message, true);
+                btn.disabled = false;
+                btn.textContent = '开始游戏';
+            }
+        } catch (error) {
+            showMessage('网络错误，请稍后重试', true);
+            btn.disabled = false;
+            btn.textContent = '开始游戏';
+        }
+    });
+
+    // 注册表单提交
+    document.getElementById('register-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const username = document.getElementById('register-username').value;
+        const password = document.getElementById('register-password').value;
+        const confirm = document.getElementById('register-confirm').value;
+        const btn = document.getElementById('register-btn');
+
+        // 验证密码确认
+        if (password !== confirm) {
+            showMessage('两次输入的密码不一致', true);
+            return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = '注册中...';
+
+        try {
+            const response = await fetch('/api/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                showMessage('注册成功！请登录');
+                // 切换到登录标签
+                switchTab('login');
+                // 自动填充用户名
+                document.getElementById('login-username').value = username;
+                document.getElementById('login-password').focus();
+            } else {
+                showMessage(data.message, true);
+            }
+        } catch (error) {
+            showMessage('网络错误，请稍后重试', true);
+        }
+
+        btn.disabled = false;
+        btn.textContent = '创建账户';
+    });
+</script>
+{% endblock %}
